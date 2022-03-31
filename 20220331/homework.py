@@ -114,7 +114,7 @@ for epoch in range(epoch_num):
     for x,y in tqdm.tqdm(iter(train_loader)):
         pre=Net(x)
         loss=criterion(pre,y)
-        running_loss=running_loss+loss/1000
+        running_loss=running_loss+loss/64
         opt.zero_grad()
         loss.backward()
         opt.step()
