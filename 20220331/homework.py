@@ -38,9 +38,11 @@ device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 Learning_Rate=1e-2
 LOSS=[]
 ACC=[]
-
+Recall=[]
+Precision=[]
+f1_score=[]
 # 读取数据
-data=pd.read_csv("diabetes.csv",index_col =['BloodPressure','SkinThickness'])
+data=pd.read_csv("diabetes.csv")
 
 # 分析数据相关性
 plt.figure(figsize=(10,10))
@@ -50,6 +52,7 @@ plt.show()
 plt.close()
 
 # 转换为numpy
+data=pd.read_csv("diabetes.csv",usecols=['Pregnancies','Glucose','Insulin','BMI','DiabetesPedigreeFunction','Age','Outcome'])
 np_data=np.array(data)
 
 # 数据归一化
@@ -80,8 +83,8 @@ torch_dataset = Data.TensorDataset(train_data_tensor,train_label_tensor)
 train_size = int(len(torch_dataset) * 0.8)
 val_size = len(torch_dataset) - train_size
 train_dataset, val_dataset = torch.utils.data.random_split(torch_dataset, [train_size, val_size])
-train_loader=Data.DataLoader(train_dataset,batch_size=64,shuffle=True)
-val_loader=Data.DataLoader(val_dataset,batch_size=64,shuffle=True)
+train_loader=Data.DataLoader(train_dataset,batch_size=128,shuffle=True)
+val_loader=Data.DataLoader(val_dataset,batch_size=128,shuffle=True)
 
 # 查看数据集
 print("train_loader length is {}".format(len(train_loader)))
@@ -124,6 +127,10 @@ for epoch in range(epoch_num):
     with torch.no_grad():
         total=0
         correct=0
+        TP=0
+        FP=0
+        TN=0
+        FN=0
         start = time.time()
         running_loss = 0.0
         for x, y in tqdm.tqdm(iter(val_loader)):
@@ -131,8 +138,20 @@ for epoch in range(epoch_num):
             _, predicted = torch.max(pre, -1)
             total += y.size(0)
             correct += (predicted == y.view(-1)).sum().item()
+            y_true = y.detach().cpu().numpy()
+            y_pred = predicted.detach().cpu().numpy()
+            TP += np.sum(np.logical_and(np.equal(y_true, 1), np.equal(y_pred, 1)))
+            FP += np.sum(np.logical_and(np.equal(y_true, 0), np.equal(y_pred, 1)))
+            TN += np.sum(np.logical_and(np.equal(y_true, 1), np.equal(y_pred, 0)))
+            FN += np.sum(np.logical_and(np.equal(y_true, 0), np.equal(y_pred, 0)))
+        precision = TP / (TP + FP)
+        recall = TP / (TP + FN)
+        F1_Score = 2 * precision * recall / (precision + recall)
         acc=correct/total
         ACC.append(acc)
+        f1_score.append(F1_Score)
+        Recall.append(recall)
+        Precision.append(precision)
         end = time.time()
     print("val {} epoch ,total acc is {}%,time use {}s".format(epoch + 1, acc, end - start))
 
@@ -152,5 +171,32 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
 plt.savefig('Loss.png', bbox_inches='tight')
+plt.show()
+plt.close()
+
+plt.figure(3)
+plt.plot(range(epoch_num), Recall, '.-b', label='Recall')
+plt.xlabel('Epoch')
+plt.ylabel('Recall')
+plt.legend()
+plt.savefig('Recall.png', bbox_inches='tight')
+plt.show()
+plt.close()
+
+plt.figure(4)
+plt.plot(range(epoch_num), Precision, '.-y', label='Precision')
+plt.xlabel('Epoch')
+plt.ylabel('Precision')
+plt.legend()
+plt.savefig('Precision.png', bbox_inches='tight')
+plt.show()
+plt.close()
+
+plt.figure(5)
+plt.plot(range(epoch_num), f1_score, '.-g', label='f1_score')
+plt.xlabel('Epoch')
+plt.ylabel('f1_score')
+plt.legend()
+plt.savefig('f1_score.png', bbox_inches='tight')
 plt.show()
 plt.close()
