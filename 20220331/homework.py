@@ -33,17 +33,17 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 # //                     佛祖保佑             永无BUG
 
 # 定义超参数
-epoch_num=50
+epoch_num=100
 device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
-Learning_Rate=1e-2
+Learning_Rate=1e-3
 LOSS=[]
 ACC=[]
 Recall=[]
 Precision=[]
 f1_score=[]
+
 # 读取数据
 data=pd.read_csv("diabetes.csv")
-
 # 分析数据相关性
 plt.figure(figsize=(10,10))
 sns.heatmap(data.corr(),annot=True)
@@ -63,11 +63,9 @@ for i in range(6):
 # 打印数据
 print(data)
 print("the csv shape is {}".format(np_data.shape))
-
 # 分为data/label
 train_data=np_data[:,:6]
 train_label=np_data[:,6]
-
 # 查看数据大小
 print("train_data.shape is {}".format(train_data.shape))
 print("train_label.shape is {}".format(train_label.shape))
@@ -85,11 +83,9 @@ val_size = len(torch_dataset) - train_size
 train_dataset, val_dataset = torch.utils.data.random_split(torch_dataset, [train_size, val_size])
 train_loader=Data.DataLoader(train_dataset,batch_size=128,shuffle=True)
 val_loader=Data.DataLoader(val_dataset,batch_size=128,shuffle=True)
-
 # 查看数据集
 print("train_loader length is {}".format(len(train_loader)))
 print("val_loader length is {}".format(len(val_loader)))
-
 # 定义网络
 class net(torch.nn.Module):
     def __init__(self):
@@ -105,7 +101,7 @@ class net(torch.nn.Module):
         linear_3 = self.linear_3(linear_2)
         return linear_3
 
-# 定义损失函数\优化器
+# 定义网络\损失函数\优化器
 Net=net().to(device)
 criterion=torch.nn.CrossEntropyLoss()
 opt=torch.optim.Adam(Net.parameters(),lr=Learning_Rate)
@@ -117,7 +113,7 @@ for epoch in range(epoch_num):
     for x,y in tqdm.tqdm(iter(train_loader)):
         pre=Net(x)
         loss=criterion(pre,y)
-        running_loss=running_loss+loss/1000
+        running_loss=running_loss+loss/128
         opt.zero_grad()
         loss.backward()
         opt.step()
