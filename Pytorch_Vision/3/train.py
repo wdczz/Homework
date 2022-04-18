@@ -22,7 +22,7 @@ def train(console):
         root="./data/MNIST",
         train=True,
         transform=transform,
-        download=True
+        download=False
     )
     train_loader = Data.DataLoader(
         dataset=train_data,
@@ -33,7 +33,7 @@ def train(console):
         root="./data/MNIST",
         transform=transform,
         train=False,
-        download=True
+        download=False
     )
 
     test_loader = Data.DataLoader(
