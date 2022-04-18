@@ -17,7 +17,7 @@ if __name__ == '__main__':
             console.log("You input a error number {}, so you can try to input 1 or 2!".format(choose))
             continue
         while not (down =="1" or down =='2') :
-            down = console.input("Do you want to shut down this windows? if you want ,please enter 1.Otherwise enter 2 -> ")
+            down = console.input("Do you want to shut down this windows? if you want to quit ,please enter 1 .Go on enter 2 -> ")
             if down=="1":
                 break
             elif down == "2":
