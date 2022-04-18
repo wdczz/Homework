@@ -8,7 +8,7 @@ import time
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from rich.table import Table
+
 
 console=Console()
 console.rule("[bold red] Download data")
