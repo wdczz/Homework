@@ -21,3 +21,7 @@ def pre(console):
     output=net(input)
     _, pre_lab = torch.max(output, 1)
     console.log("The result is {}".format(int(pre_lab.detach().cpu())))
+    cv2.imshow("test", img)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+

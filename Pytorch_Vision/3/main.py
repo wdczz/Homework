@@ -8,7 +8,8 @@ if __name__ == '__main__':
         down='0'
         choose = console.input("Choose your action --- 1. train the net / 2. use the net to predict / 3. Quit -> ")
         if choose=="1":
-            train(console)
+            net_choose = console.input("Choose your net to train  --- 1. Convnet / 2. Lenet / -> ")
+            train(console,net_choose)
         elif choose == "2":
             pre(console)
         elif choose == "3":

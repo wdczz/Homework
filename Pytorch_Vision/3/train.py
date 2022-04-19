@@ -9,12 +9,12 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import cv2
 from tqdm import tqdm
-from net import ConvNet
+from net import ConvNet,LeNet
 # transform = transforms.Compose([transforms.ToTensor(),
 #                                 transforms.Normalize(mean=[0.1307, ],
 #                                                      std=[0.3081, ])])
 
-def train(console):
+def train(console,net_choose):
     transform = transforms.Compose([
         transforms.ToTensor()
                                     ])
@@ -41,12 +41,13 @@ def train(console):
         batch_size=128,
         shuffle=True,
     )
-
-    MyConvnet = ConvNet().to("cuda")
-    optimizer = torch.optim.Adam(MyConvnet.parameters(), lr=0.0003)
+    if net_choose=='1':
+        MyConvnet = ConvNet().to("cuda")
+    else:
+        MyConvnet=LeNet().to("cuda")
+    optimizer = torch.optim.Adam(MyConvnet.parameters(), lr=0.001)
     loss_func = nn.CrossEntropyLoss()
-    epoch_num = 4
-    print_step = 100
+    epoch_num = 10
     acc_list = []
     loss_list = []
     for epoch in range(epoch_num):
@@ -89,7 +90,10 @@ def train(console):
         print("The testing set accuracy is {}".format(acc_total))
         print("predict is {}".format(pre_lab))
         print("label is {}".format(b_y.to("cpu")))
-    torch.save(MyConvnet, 'Convnet.pt')
+    if net_choose=="1":
+        torch.save(MyConvnet, 'Convnet.pt')
+    else:
+        torch.save(MyConvnet, 'lenet.pt')
     console.log("Successfully save the model!")
     img = utils.make_grid(b_x.to("cpu"))
     img = img.numpy().transpose(1, 2, 0)
