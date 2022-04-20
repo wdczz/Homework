@@ -12,7 +12,7 @@ def pre(console):
         except:
             console.log("Oh the path maybe is not effective ,so give me another one !")
     transform = transforms.Compose([
-        transforms.Resize(28),
+        transforms.Resize([28,28]),
         transforms.ToTensor()
                                     ])
     img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
