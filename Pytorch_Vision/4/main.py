@@ -8,18 +8,20 @@ def draw(cnt,img):
     img=cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),1)
     return img
 
-def get_patch(img,cnt,dst,index,net_choose):
+def get_patch(img,cnt,dst,index,net_choose,device):
     x, y, w, h = cv2.boundingRect(cnt)
-    output=dst[y-10:y+h+10,x-10:x+w+10]
-    result = pre(console, output,index,net_choose)
+    output=dst[y-20:y+h+20,x-20:x+w+20]
+    result = pre(console, output,index,net_choose,device)
     img = cv2.putText(img, str(result), (x, y), cv2.FONT_HERSHEY_PLAIN,3, (0, 255, 0))
     return img
 
 if __name__ == '__main__':
     console = Console()
     console.rule("Start")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    console.print("Your device is {}".format(device))
     while True:
-        net_choose = console.input("Choose your net to train  --- 1. Convnet / 2. Lenet / 3. Quit -> ")
+        net_choose = console.input("Choose your net to use --- 1. Convnet / 2. Lenet / 3. Quit -> ")
         if net_choose=='3':
             break
         elif net_choose!='1' and net_choose!='2' and net_choose!='3':
@@ -33,20 +35,21 @@ if __name__ == '__main__':
                     break
             except:
                 console.log("Oh the path maybe is not effective ,so give me another one !")
-        cv2.namedWindow("show", cv2.WINDOW_GUI_NORMAL)
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         retval, dst = cv2.threshold(gray,0,255,cv2.THRESH_OTSU)
         dst = cv2.bitwise_not(dst)
         cnts,_=cv2.findContours(dst, cv2.RETR_EXTERNAL  , cv2.CHAIN_APPROX_SIMPLE)
-        print(len(cnts))
+        console.print("This picture has {} number".format(len(cnts)))
         img = cv2.drawContours(img, cnts, -1, (0, 255, 0), 1)
         start=time.time()
         for index,cnt in enumerate(cnts):
             area = cv2.contourArea(cnt)
             if area > 20:
                 img=draw(cnt,img)
-                img=get_patch(img,cnt,dst,index,net_choose)
+                img=get_patch(img,cnt,dst,index,net_choose,device)
         console.print("Use {}s to predict!".format(time.time()-start))
+        cv2.namedWindow("show", cv2.WINDOW_GUI_NORMAL)
         cv2.imshow("show",img)
         cv2.waitKey()
     console.rule("End")

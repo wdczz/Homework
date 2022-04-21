@@ -14,7 +14,7 @@ from net import ConvNet,LeNet
 #                                 transforms.Normalize(mean=[0.1307, ],
 #                                                      std=[0.3081, ])])
 
-def train(console,net_choose):
+def train(console,net_choose,device,epoch):
     transform = transforms.Compose([
         transforms.ToTensor()
                                     ])
@@ -42,22 +42,24 @@ def train(console,net_choose):
         shuffle=True,
     )
     if net_choose=='1':
-        MyConvnet = ConvNet().to("cuda")
+        MyConvnet = ConvNet().to(device)
     else:
-        MyConvnet=LeNet().to("cuda")
-    optimizer = torch.optim.Adam(MyConvnet.parameters(), lr=0.001)
+        MyConvnet=LeNet().to(device)
+    optimizer = torch.optim.Adam(MyConvnet.parameters(), lr=0.0001)
     loss_func = nn.CrossEntropyLoss()
-    epoch_num = 10
+    epoch_num = int(epoch)
     acc_list = []
     loss_list = []
+    best=0
+    best_index=0
     for epoch in range(epoch_num):
         print("\nepoch:", epoch)
         train_loss = 0
         acc_total = 0
         print("Training")
         for b_x, b_y in tqdm(iter(train_loader)):
-            b_x = b_x.to("cuda")
-            b_y = b_y.to("cuda")
+            b_x = b_x.to(device)
+            b_y = b_y.to(device)
             output = MyConvnet(b_x)
             loss = loss_func(output, b_y)
             optimizer.zero_grad()
@@ -68,20 +70,27 @@ def train(console,net_choose):
         print("\nVerify the training set accuracy!")
         with torch.no_grad():
             for b_x, b_y in tqdm(iter(test_loader)):
-                b_x = b_x.to("cuda")
+                b_x = b_x.to(device)
                 output = MyConvnet(b_x)
                 _, pre_lab = torch.max(output, 1)
                 acc = accuracy_score(b_y, pre_lab.to("cpu"))
                 acc_total += acc
         acc_list.append(acc_total / len(test_loader))
-        loss_list.append(train_loss / len(test_loader))
+        loss_list.append(train_loss.detach().cpu().numpy() / len(test_loader))
         print("\nThe training set accuracy is {}".format(acc_total / len(test_loader)))
+        if acc_total>best:
+            if net_choose == "1":
+                torch.save(MyConvnet, 'Convnet{}.pt'.format(device))
+            else:
+                torch.save(MyConvnet, 'lenet{}.pt'.format(device))
+            best=acc_total
+            best_index=epoch
 
     print("\nVerify the testing set accuracy!")
     with torch.no_grad():
         acc_total = 0
         for b_x, b_y in tqdm(iter(test_loader)):
-            b_x = b_x.to("cuda")
+            b_x = b_x.to(device)
             output = MyConvnet(b_x)
             _, pre_lab = torch.max(output, 1)
             acc = accuracy_score(b_y, pre_lab.to("cpu"))
@@ -90,10 +99,7 @@ def train(console,net_choose):
         print("The testing set accuracy is {}".format(acc_total))
         print("predict is {}".format(pre_lab))
         print("label is {}".format(b_y.to("cpu")))
-    if net_choose=="1":
-        torch.save(MyConvnet, 'Convnet.pt')
-    else:
-        torch.save(MyConvnet, 'lenet.pt')
+    console.log("The best model is epoch {}".format(best_index))
     console.log("Successfully save the model!")
     img = utils.make_grid(b_x.to("cpu"))
     img = img.numpy().transpose(1, 2, 0)
